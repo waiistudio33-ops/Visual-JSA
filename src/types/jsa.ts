@@ -3,25 +3,31 @@
 export interface JsaData {
   id: string;
   jsaNo: string;
-  jobStep: string; // ขั้นตอนการทำงาน
-  equipment: string; // เครื่องมือ/อุปกรณ์
-  potentialHazard: string; // อันตรายที่อาจเกิดขึ้น
-  consequence: string; // ผลกระทบที่อาจเกิดขึ้น
-  initialRisk: number; // ความเสี่ยงก่อนการควบคุม (Score)
-  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  controlMeasures: string; // มาตรการควบคุมความเสี่ยง
-  
-  // พิกัดสำหรับแสดงบนแผนที่ (Innovation)
+  jobStep: string;
+  equipment: string;
+  potentialHazard: string;
+  consequence: string;
+  initialRisk: number;
+  riskLevel: string;
+  controlMeasures: string;
   lat: number;
   lng: number;
   area: string;
+  status?: string;
+  created_at?: string;
   
-  // ระบบ SIMOPS (Innovation)
-  simops: boolean;
-  simopsDetail: string;
-
-  // 🌟 เพิ่มฟิลด์สำหรับระบบ Workflow และตัวกรอง
-  status?: 'PENDING' | 'VERIFIED' | 'APPROVED'; // สถานะงาน
-  high_risk_tags?: string[]; // ประเภทงาน (Tag)
-  created_at?: string; // 🌟 วันที่สร้าง (สำหรับตัวกรองเวลา)
+  // Tags & SIMOPS
+  high_risk_tags?: string[];
+  simops?: boolean;
+  simopsDetail?: string;
+  liftingEquipment?: string;
+  
+  // 🌟 ส่วนที่ต้องเพิ่มเข้าไปใหม่ (ระบบคะแนน Risk Score) 🌟
+  likelihood?: number;
+  severity?: number;
+  risk_score?: number;
+  verification?: string;
+  residual_likelihood?: number;
+  residual_severity?: number;
+  residual_risk_score?: number;
 }

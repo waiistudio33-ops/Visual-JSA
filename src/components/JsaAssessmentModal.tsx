@@ -329,11 +329,21 @@ export default function JsaAssessmentModal({ jobs = [], savedZones = [], onClose
     const newJsaRecord = {
       id: Date.now().toString(),
       jsaNo: `JSA-${Math.floor(1000 + Math.random() * 9000)}`,
-      jobStep, equipment, potentialHazard: hazard, consequence, initialRisk: initialScore,
+      jobStep, equipment, potentialHazard: hazard, consequence, 
+      initialRisk: initialScore, // คงของเดิมไว้เผื่อระบบเก่าเรียกใช้
       riskLevel: initialScore >= 15 ? 'CRITICAL' : initialScore >= 10 ? 'HIGH' : initialScore >= 5 ? 'MEDIUM' : 'LOW',
       controlMeasures, lat: pinLat, lng: pinLng, area: areaName,
       high_risk_tags: selectedTags, simops: initialScore >= 15, simopsDetail: initialScore >= 15 ? 'ความเสี่ยงสูง ตรวจพบเงื่อนไข SIMOPS' : '',
-      liftingEquipment, verification, residualRiskScore: residualScore
+      liftingEquipment, 
+      verification, 
+      
+      // 🌟 ส่วนที่เพิ่มใหม่: จับคู่ตัวแปรให้ตรงกับชื่อคอลัมน์ใน Supabase เป๊ะๆ 🌟
+      likelihood: initialL,
+      severity: initialS,
+      risk_score: initialScore,
+      residual_likelihood: residualL,
+      residual_severity: residualS,
+      residual_risk_score: residualScore
     };
     
     setIsSuccess(true);
