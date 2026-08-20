@@ -92,7 +92,8 @@ export default function Sidebar({
 
   return (
     <>
-      <aside className="w-full h-full bg-white border-r border-slate-100 flex flex-col z-10 font-['Poppins','Prompt',sans-serif] relative transition-all duration-300">
+      {/* 🌟 เปลี่ยนฟอนต์ตรงนี้เป็น font-hybrid ให้เหมือนหน้าอื่น */}
+      <aside className="w-full h-full bg-white border-r border-slate-100 flex flex-col z-10 font-hybrid relative transition-all duration-300">
         
         <button onClick={onToggleCollapse} className="hidden md:flex absolute top-8 -right-3.5 z-50 bg-white border border-slate-200 rounded-full p-1.5 shadow-sm hover:bg-slate-50 text-slate-400 hover:text-slate-700 transition-transform hover:scale-110 outline-none">
           {isCollapsed ? <ChevronRight className="w-4 h-4"/> : <ChevronLeft className="w-4 h-4"/>}
@@ -108,8 +109,8 @@ export default function Sidebar({
         <div className={`flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-6'} py-7 border-b border-slate-50 shrink-0 transition-all duration-300`}>
           <div className="relative">
             <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-slate-200 shrink-0 cursor-pointer hover:bg-slate-50 transition-colors overflow-hidden shadow-sm p-1" onClick={isCollapsed ? onToggleCollapse : undefined} title={isCollapsed ? "Expand Sidebar" : ""}>
-  <img src="/Logo JSA.svg" alt="Logo" className="w-full h-full object-contain" />
-</div>
+              <img src="/Logo JSA.svg" alt="Logo" className="w-full h-full object-contain" />
+            </div>
             {isCollapsed && pendingActionCount > 0 && (
               <button onClick={() => setShowPendingList(true)} className="absolute -top-1.5 -right-1.5 flex h-4 w-4 outline-none">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
@@ -271,7 +272,7 @@ export default function Sidebar({
 
       {/* MODAL ต่างๆ (Pending List / Logout / Profile) ยังคงเหมือนเดิม */}
       {showPendingList && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-300 font-['Inter','Kanit',sans-serif]">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-300 font-hybrid">
           <div className="bg-white rounded-3xl w-full max-w-[420px] max-h-[85vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden">
             <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <div className="flex items-center gap-3">
@@ -309,11 +310,11 @@ export default function Sidebar({
       )}
 
       {showLogoutConfirm && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-300 font-['Inter','Kanit',sans-serif]" onClick={() => setShowLogoutConfirm(false)}>
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-300 font-hybrid" onClick={() => setShowLogoutConfirm(false)}>
           <div className="bg-white rounded-t-[2.5rem] sm:rounded-3xl p-6 sm:p-8 w-full sm:max-w-[380px] text-center shadow-2xl animate-in slide-in-from-bottom-8 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300 pb-10 sm:pb-8" onClick={(e) => e.stopPropagation()}>
             <div className="w-12 h-1.5 bg-slate-200 hover:bg-slate-300 rounded-full mx-auto mb-6 sm:hidden cursor-pointer transition-colors" onClick={() => setShowLogoutConfirm(false)}></div>
             <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-5 border-[6px] border-white shadow-sm"><LogOut className="w-8 h-8 text-rose-500 ml-1" /></div>
-            <h3 className="text-2xl font-bold text-slate-800 mb-2 tracking-tight">ออกจากระบบ?</h3>
+            <h3 className="text-2xl font-black text-slate-800 mb-2 tracking-tight">ออกจากระบบ?</h3>
             <p className="text-[14px] font-medium text-slate-500 mb-8 leading-relaxed px-2">คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบ Visual JSA ในขณะนี้</p>
             <div className="flex flex-col sm:flex-row gap-3">
               <button onClick={() => setShowLogoutConfirm(false)} className="w-full sm:w-1/2 py-4 sm:py-3.5 rounded-2xl font-bold text-[14px] text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors outline-none">ยกเลิก</button>

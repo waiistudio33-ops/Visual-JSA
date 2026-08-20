@@ -8,17 +8,17 @@ export type UserRole = 'MAKER' | 'CHECKER' | 'APPROVER';
 // 🔑 Mockup Credentials
 const DEMO_ACCOUNTS = [
   { 
-    role: 'MAKER', name: 'ช่างสมชาย', email: 'maker@demo.com', password: 'password123', icon: User,
+    role: 'MAKER', name: 'ช่างสมชาย (Maker)', email: 'maker@demo.com', password: 'password123', icon: User,
     activeClass: 'bg-indigo-600 text-white shadow-[0_8px_16px_rgba(79,70,229,0.3)] ring-2 ring-indigo-600 ring-offset-2',
     inactiveClass: 'bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200'
   },
   { 
-    role: 'CHECKER', name: 'จป. สมหญิง', email: 'checker@demo.com', password: 'password123', icon: ShieldCheck,
+    role: 'CHECKER', name: 'จป. สมหญิง (Checker)', email: 'checker@demo.com', password: 'password123', icon: ShieldCheck,
     activeClass: 'bg-emerald-600 text-white shadow-[0_8px_16px_rgba(16,185,129,0.3)] ring-2 ring-emerald-600 ring-offset-2',
     inactiveClass: 'bg-white text-slate-600 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200'
   },
   { 
-    role: 'APPROVER', name: 'ผอ. สมศักดิ์', email: 'approver@demo.com', password: 'password123', icon: KeySquare,
+    role: 'APPROVER', name: 'หัวหน้าสมศักดิ์ (Approver)', email: 'approver@demo.com', password: 'password123', icon: KeySquare,
     activeClass: 'bg-rose-600 text-white shadow-[0_8px_16px_rgba(225,29,72,0.3)] ring-2 ring-rose-600 ring-offset-2',
     inactiveClass: 'bg-white text-slate-600 border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200'
   },
