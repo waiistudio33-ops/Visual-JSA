@@ -2,7 +2,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import Map, { Marker, NavigationControl, FullscreenControl, Source, Layer, Popup } from 'react-map-gl/maplibre';
 import { 
-  MapPin, Zap, X, PencilRuler, Check, Eye, Navigation, Undo2, AlertTriangle, 
+  MapPin, Zap, X, PencilRuler, Check, Eye, Undo2, AlertTriangle, 
   ShieldCheck, Layers, ArrowUpCircle, Flame, Archive, Cog, CheckCircle2, Clock 
 } from 'lucide-react';
 import * as turf from '@turf/turf'; 
@@ -53,7 +53,6 @@ export default function MapSection({
   const [draftRing, setDraftRing] = useState<number[][]>([]);
   const [cursorLngLat, setCursorLngLat] = useState<[number, number] | null>(null);
 
-  // 🌟 ฟังก์ชันจัดการคีย์ลัด (Keyboard Shortcuts)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isDrawingMode) return;
@@ -168,14 +167,12 @@ export default function MapSection({
     return '#94a3b8';
   };
 
-  // 🌟 Component ย่อยสำหรับเรนเดอร์ Status Badge
   const StatusBadge = ({ status }: { status?: string }) => {
     if (status === 'APPROVED') return <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-sm border border-emerald-200"><CheckCircle2 className="w-3 h-3"/> <span className="text-[9px] font-bold tracking-wide">APPROVED</span></span>;
     if (status === 'VERIFIED') return <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-sm border border-blue-200"><ShieldCheck className="w-3 h-3"/> <span className="text-[9px] font-bold tracking-wide">VERIFIED</span></span>;
     return <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-sm border border-amber-200"><Clock className="w-3 h-3"/> <span className="text-[9px] font-bold tracking-wide">PENDING</span></span>;
   };
 
-  // 🌟 Component ย่อยสำหรับเรนเดอร์ Tags
   const JobTags = ({ tags, simops }: { tags?: string[], simops?: boolean }) => {
     return (
       <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -201,7 +198,24 @@ export default function MapSection({
   return (
     <div className="relative w-full h-full font-['Inter','Kanit',sans-serif]">
       
-      {/* ✏️ แผงควบคุมการวาด (Responsive รองรับมือถือและ iPad) */}
+      {/* 🌟 CSS แก้ปัญหา Popup ยืดหด และบังจอ */}
+      <style>{`
+        /* ปิด Style พื้นฐานของ Mapbox/Maplibre ที่ชอบตีกับ Tailwind */
+        .custom-popup .maplibregl-popup-content,
+        .custom-popup .mapboxgl-popup-content {
+          padding: 0 !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          border-radius: 16px !important;
+        }
+        /* ปรับเงาของสามเหลี่ยมชี้ (Tip) */
+        .custom-popup .maplibregl-popup-tip,
+        .custom-popup .mapboxgl-popup-tip {
+          border-top-color: white !important;
+        }
+      `}</style>
+
+      {/* ✏️ แผงควบคุมการวาด */}
       {isDrawingMode && (
         <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95vw] sm:w-auto max-w-2xl bg-white/95 backdrop-blur-xl p-2 sm:p-3 rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border border-slate-200 flex flex-col sm:flex-row items-center gap-2 sm:gap-3 animate-in slide-in-from-bottom-5">
           <div className="flex items-center gap-3 text-slate-700 bg-cyan-50/80 px-4 py-2.5 rounded-xl border border-cyan-100 w-full justify-center sm:w-auto shrink-0">
@@ -350,7 +364,7 @@ export default function MapSection({
           );
         })}
 
-        {/* 🌟 Popup สำหรับหมุดเดี่ยว (Responsive RWD) */}
+        {/* 🌟 Popup สำหรับหมุดเดี่ยว ล็อคขนาดให้คงที่ */}
         {selectedJob && (
           <Popup 
             latitude={selectedJob.lat} longitude={selectedJob.lng} 
@@ -358,17 +372,18 @@ export default function MapSection({
             onClose={() => setSelectedJob(null)} closeOnClick={false} closeButton={false} 
             className="z-50 custom-popup" maxWidth="none" 
           >
-            <div className="w-[85vw] sm:w-[340px] max-w-sm font-['Inter','Kanit',sans-serif] flex flex-col gap-3 p-1.5">
+            <div className="w-[300px] sm:w-[340px] bg-white rounded-[16px] shadow-xl border border-slate-100 flex flex-col gap-3 p-3.5 relative pointer-events-auto">
               <div className="flex justify-between items-start gap-2">
                 <div className="flex flex-col gap-1.5 items-start">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-[10px] font-black uppercase bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md border border-slate-200 shadow-sm">{selectedJob.jsaNo}</span>
                     <StatusBadge status={selectedJob.status} />
                   </div>
-                  {/* แสดง TAGs ใต้เลข JSA */}
                   <JobTags tags={selectedJob.high_risk_tags} simops={selectedJob.simops} />
                 </div>
-                <button onClick={() => setSelectedJob(null)} className="text-slate-400 hover:bg-slate-100 hover:text-slate-600 p-1.5 rounded-full transition-colors active:scale-95 shrink-0"><X className="w-4 h-4"/></button>
+                <button onClick={(e) => { e.stopPropagation(); setSelectedJob(null); }} className="text-slate-400 hover:bg-slate-100 hover:text-slate-600 p-1.5 rounded-full transition-colors active:scale-95 shrink-0">
+                  <X className="w-4 h-4"/>
+                </button>
               </div>
 
               <h4 className="text-[14px] font-black text-slate-800 leading-snug line-clamp-2 pr-1">{selectedJob.jobStep}</h4>
@@ -378,20 +393,22 @@ export default function MapSection({
                 <div className="flex items-start gap-2"><AlertTriangle className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5"/><span className="line-clamp-2 font-medium">{selectedJob.potentialHazard}</span></div>
               </div>
                 
-              <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+              <div className="flex items-center justify-between pt-1 border-t border-slate-100 mt-1">
                 <div className="flex flex-col mt-1">
                   <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Risk Level</span>
                   <span className={`text-[10px] font-black px-2.5 py-0.5 rounded text-white shadow-sm w-max ${selectedJob.riskLevel === 'CRITICAL' ? 'bg-rose-600' : selectedJob.riskLevel === 'HIGH' ? 'bg-orange-500' : selectedJob.riskLevel === 'MEDIUM' ? 'bg-amber-500' : 'bg-blue-500'}`}>{selectedJob.riskLevel}</span>
                 </div>
                 {onViewJsaDetail && (
-                  <button onClick={() => onViewJsaDetail(selectedJob)} className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2.5 rounded-lg flex items-center justify-center gap-1.5 shadow-md shadow-slate-900/20 transition-all active:scale-95"><Eye className="w-3.5 h-3.5" /> รายละเอียด</button>
+                  <button onClick={(e) => { e.stopPropagation(); onViewJsaDetail(selectedJob); }} className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2.5 rounded-lg flex items-center justify-center gap-1.5 shadow-md shadow-slate-900/20 transition-all active:scale-95">
+                    <Eye className="w-3.5 h-3.5" /> รายละเอียด
+                  </button>
                 )}
               </div>
             </div>
           </Popup>
         )}
 
-        {/* 🌟 Popup สำหรับกลุ่มหมุด Cluster (Responsive RWD) */}
+        {/* 🌟 Popup สำหรับกลุ่มหมุด Cluster ล็อคขนาดให้คงที่ */}
         {selectedCluster && (
           <Popup 
             latitude={selectedCluster[0].lat} longitude={selectedCluster[0].lng} 
@@ -399,18 +416,19 @@ export default function MapSection({
             onClose={() => setSelectedCluster(null)} closeOnClick={false} closeButton={false} 
             className="z-50 custom-popup" maxWidth="none" 
           >
-            <div className="w-[85vw] sm:w-[360px] max-w-sm font-['Inter','Kanit',sans-serif] flex flex-col gap-2 p-1.5">
-              <div className="flex justify-between items-center mb-1 px-1">
+            <div className="w-[300px] sm:w-[360px] bg-white rounded-[16px] shadow-xl border border-slate-100 flex flex-col gap-2 p-3.5 relative pointer-events-auto">
+              <div className="flex justify-between items-center mb-1">
                 <h4 className="text-[13px] font-black text-slate-800 flex items-center gap-1.5">
                   <Layers className="w-4 h-4 text-indigo-500" /> พบ {selectedCluster.length} รายการในจุดนี้
                 </h4>
-                <button onClick={() => setSelectedCluster(null)} className="text-slate-400 hover:bg-slate-100 hover:text-slate-600 p-1.5 rounded-full transition-colors active:scale-95"><X className="w-4 h-4"/></button>
+                <button onClick={(e) => { e.stopPropagation(); setSelectedCluster(null); }} className="text-slate-400 hover:bg-slate-100 hover:text-slate-600 p-1.5 rounded-full transition-colors active:scale-95">
+                  <X className="w-4 h-4"/>
+                </button>
               </div>
               
-              {/* ปรับความสูงให้เหมาะกับหน้าจอ */}
-              <div className="max-h-[40vh] sm:max-h-[300px] overflow-y-auto custom-scrollbar flex flex-col gap-2.5 pr-1">
+              <div className="max-h-[300px] overflow-y-auto custom-scrollbar flex flex-col gap-2.5 pr-1">
                 {selectedCluster.map((job) => (
-                  <div key={job.id} className="bg-slate-50/80 border border-slate-200 rounded-xl p-3 flex flex-col gap-2 hover:border-indigo-300 transition-colors shadow-sm">
+                  <div key={job.id} className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col gap-2 hover:border-indigo-300 transition-colors shadow-sm">
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-black uppercase bg-white text-slate-700 px-2 py-1 rounded-md border border-slate-200 w-max">{job.jsaNo}</span>
@@ -422,13 +440,13 @@ export default function MapSection({
                     </div>
                     
                     <p className="text-xs font-bold text-slate-700 line-clamp-2 leading-tight mt-1">{job.jobStep}</p>
-                    
                     <JobTags tags={job.high_risk_tags} simops={job.simops} />
 
                     <div className="flex justify-end mt-1">
                       {onViewJsaDetail && (
                         <button 
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             onViewJsaDetail(job);
                             setSelectedCluster(null); 
                           }} 
