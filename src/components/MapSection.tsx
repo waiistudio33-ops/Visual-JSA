@@ -252,8 +252,8 @@ export default function MapSection({
         style={{ width: '100%', height: '100%', cursor: isAddingMode || isDrawingMode ? 'crosshair' : 'grab' }}
         onClick={handleMapClick}
       >
-        <NavigationControl position="bottom-right" className="!m-4" />
-        <FullscreenControl position="top-right" className="!m-4" />
+        <NavigationControl position="bottom-right" />
+        <FullscreenControl position="top-right" />
 
         {savedZones.map((zone, idx) => {
           const color = ZONE_COLORS[idx % ZONE_COLORS.length];
