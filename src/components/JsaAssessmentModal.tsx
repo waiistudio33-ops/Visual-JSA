@@ -233,8 +233,8 @@ export default function JsaAssessmentModal({ jobs = [], savedZones = [], onClose
     const historyTemplates = (jobs || []).map(job => ({
       id: `history-${job.id}`, category: `ประวัติเดิม (${job.jsaNo})`, jobStep: job.jobStep, equipment: job.equipment,
       potentialHazard: job.potentialHazard, consequence: job.consequence,
-      initialL: 3, initialS: Math.ceil(job.initialRisk / 3) || 3, controlMeasures: job.controlMeasures,
-      criticalVerification: job.verification, residualL: 1, residualS: job.residualRiskScore || 1
+      initialL: job.likelihood || 3, initialS: job.severity || (Math.ceil(job.initialRisk / 3) || 3), controlMeasures: job.controlMeasures,
+      criticalVerification: job.verification, residualL: job.residual_likelihood || 1, residualS: job.residual_severity || 1
     }));
     return [...historyTemplates, ...jsaTemplates];
   }, [jobs]);
@@ -255,7 +255,6 @@ export default function JsaAssessmentModal({ jobs = [], savedZones = [], onClose
   const [residualL, setResidualL] = useState(1);
   const [residualS, setResidualS] = useState(1);
 
-  // 🌟 Tags States (ที่หายไป ผมเติมให้แล้วครับ!)
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [customTags, setCustomTags] = useState<string[]>([]); 
   const [customTagInput, setCustomTagInput] = useState('');
@@ -288,7 +287,6 @@ export default function JsaAssessmentModal({ jobs = [], savedZones = [], onClose
     }
   };
 
-  // 🌟 ฟังก์ชันจัดการเพิ่มและลบ Custom Tag
   const handleAddCustomTag = (e?: React.FormEvent | React.KeyboardEvent) => {
     if (e) e.preventDefault();
     const tag = customTagInput.trim();
@@ -303,18 +301,33 @@ export default function JsaAssessmentModal({ jobs = [], savedZones = [], onClose
     setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
   };
 
+  // 🌟 ฟังก์ชันฉลาดๆ: ใช้ 2D Array ลอกแบบตาราง 5x5 ในรูปมาตรงๆ เลย!
+  const getRiskBadge = (l: number, s: number) => {
+    const score = l * s;
+    
+    // โครงสร้างตารางตามรูปภาพ: riskMatrix[แถวแนวตั้ง L][คอลัมน์แนวนอน S]
+    // สังเกตว่า Array เริ่มที่ 0 เลยต้องเอา l-1 และ s-1
+    const riskMatrix = [
+      ['LOW', 'LOW', 'MEDIUM', 'MEDIUM', 'HIGH'],          // แถว L=1
+      ['LOW', 'MEDIUM', 'MEDIUM', 'HIGH', 'HIGH'],         // แถว L=2
+      ['LOW', 'MEDIUM', 'MEDIUM', 'HIGH', 'CRITICAL'],     // แถว L=3
+      ['MEDIUM', 'MEDIUM', 'HIGH', 'HIGH', 'CRITICAL'],    // แถว L=4
+      ['MEDIUM', 'HIGH', 'HIGH', 'CRITICAL', 'CRITICAL']   // แถว L=5
+    ];
+    
+    const level = riskMatrix[l - 1][s - 1];
+
+    if (level === 'CRITICAL') return { label: 'EXTREME', level: 'CRITICAL', color: 'bg-rose-600 text-white', light: 'bg-rose-50 border-rose-200 text-rose-700' };
+    if (level === 'HIGH') return { label: 'HIGH', level: 'HIGH', color: 'bg-orange-500 text-white', light: 'bg-orange-50 border-orange-200 text-orange-700' };
+    if (level === 'MEDIUM') return { label: 'MEDIUM', level: 'MEDIUM', color: 'bg-amber-400 text-amber-900', light: 'bg-amber-50 border-amber-200 text-amber-900' };
+    return { label: 'LOW', level: 'LOW', color: 'bg-emerald-500 text-white', light: 'bg-emerald-50 border-emerald-200 text-emerald-700' };
+  };
+
   const initialScore = initialL * initialS;
   const residualScore = residualL * residualS;
 
-  const getRiskBadge = (score: number) => {
-    if (score >= 20) return { label: 'EXTREME', color: 'bg-rose-600 text-white', light: 'bg-rose-50 border-rose-200 text-rose-700' };
-    if (score >= 12) return { label: 'HIGH', color: 'bg-orange-500 text-white', light: 'bg-orange-50 border-orange-200 text-orange-700' };
-    if (score >= 6) return { label: 'MEDIUM', color: 'bg-amber-400 text-slate-900', light: 'bg-amber-50 border-amber-200 text-amber-900' };
-    return { label: 'LOW', color: 'bg-emerald-500 text-white', light: 'bg-emerald-50 border-emerald-200 text-emerald-700' };
-  };
-
-  const initialInfo = getRiskBadge(initialScore);
-  const residualInfo = getRiskBadge(residualScore);
+  const initialInfo = getRiskBadge(initialL, initialS);
+  const residualInfo = getRiskBadge(residualL, residualS);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -330,14 +343,20 @@ export default function JsaAssessmentModal({ jobs = [], savedZones = [], onClose
       id: Date.now().toString(),
       jsaNo: `JSA-${Math.floor(1000 + Math.random() * 9000)}`,
       jobStep, equipment, potentialHazard: hazard, consequence, 
-      initialRisk: initialScore, // คงของเดิมไว้เผื่อระบบเก่าเรียกใช้
-      riskLevel: initialScore >= 15 ? 'CRITICAL' : initialScore >= 10 ? 'HIGH' : initialScore >= 5 ? 'MEDIUM' : 'LOW',
+      initialRisk: initialScore, 
+      
+      // 🌟 ใช้ Risk Level ที่ประมวลผลจาก Matrix ให้ถูกต้องแม่นยำ 100%
+      riskLevel: initialInfo.level,
       controlMeasures, lat: pinLat, lng: pinLng, area: areaName,
-      high_risk_tags: selectedTags, simops: initialScore >= 15, simopsDetail: initialScore >= 15 ? 'ความเสี่ยงสูง ตรวจพบเงื่อนไข SIMOPS' : '',
+      high_risk_tags: selectedTags, 
+      
+      // กำหนดเงื่อนไข SIMOPS เป็นเฉพาะงานระดับ CRITICAL (Extreme) ขึ้นไป
+      simops: initialInfo.level === 'CRITICAL', 
+      simopsDetail: initialInfo.level === 'CRITICAL' ? 'ความเสี่ยงระดับ EXTREME ตรวจพบเงื่อนไข SIMOPS' : '',
+      
       liftingEquipment, 
       verification, 
       
-      // 🌟 ส่วนที่เพิ่มใหม่: จับคู่ตัวแปรให้ตรงกับชื่อคอลัมน์ใน Supabase เป๊ะๆ 🌟
       likelihood: initialL,
       severity: initialS,
       risk_score: initialScore,

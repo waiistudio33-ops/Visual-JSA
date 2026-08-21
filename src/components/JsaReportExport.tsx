@@ -51,21 +51,37 @@ export default function JsaReportExport({ jobs, onClose }: JsaReportExportProps)
     });
   }, [jobs, timeFilter, riskFilter, searchQuery]);
 
-  // จัดรูปแบบคะแนนและสีให้สวยงามทั้งบนจอและตอนพิมพ์
-  const renderRiskBadge = (score: number, level: string) => {
+  // 🌟 ฟังก์ชันจัดรูปแบบคะแนนและสี (ใช้ 2D Array ตามตาราง Risk Matrix 5x5 เป๊ะๆ)
+  const renderRiskBadge = (score?: number, level?: string, l?: number, s?: number) => {
+    let calcLevel = level || 'LOW';
+    const finalScore = score || (l && s ? l * s : 0);
+    
+    // ถ้ามีค่า L, S ครบ ให้ใช้ Matrix 2D คำนวณสีใหม่ให้เป๊ะที่สุด
+    if (l && s && l >= 1 && l <= 5 && s >= 1 && s <= 5) {
+      const riskMatrix = [
+        ['LOW', 'LOW', 'MEDIUM', 'MEDIUM', 'HIGH'],          // แถว L=1
+        ['LOW', 'MEDIUM', 'MEDIUM', 'HIGH', 'HIGH'],         // แถว L=2
+        ['LOW', 'MEDIUM', 'MEDIUM', 'HIGH', 'CRITICAL'],     // แถว L=3
+        ['MEDIUM', 'MEDIUM', 'HIGH', 'HIGH', 'CRITICAL'],    // แถว L=4
+        ['MEDIUM', 'HIGH', 'HIGH', 'CRITICAL', 'CRITICAL']   // แถว L=5
+      ];
+      calcLevel = riskMatrix[l - 1][s - 1];
+    }
+
     let bgColor = '';
     let textColor = 'text-white';
-    let label = '';
-    let equation = '';
+    let label = 'Low';
+    let equation = (l && s) ? `L${l} × S${s}` : '-';
 
-    if (score >= 20 || level === 'CRITICAL') {
-      bgColor = 'bg-rose-600 border-rose-700'; label = 'Extreme'; equation = 'L4 × S5';
-    } else if (score >= 15 || level === 'HIGH') {
-      bgColor = 'bg-orange-500 border-orange-600'; label = 'High'; equation = 'L3 × S5';
-    } else if (score >= 10 || level === 'MEDIUM') {
-      bgColor = 'bg-amber-400 border-amber-500'; textColor = 'text-amber-900'; label = 'Medium'; equation = 'L2 × S5';
+    // เทียบสีตาม calcLevel ที่ได้จากตาราง
+    if (calcLevel === 'CRITICAL' || calcLevel === 'EXTREME') {
+      bgColor = 'bg-rose-600 border-rose-700'; label = 'Extreme';
+    } else if (calcLevel === 'HIGH') {
+      bgColor = 'bg-orange-500 border-orange-600'; label = 'High';
+    } else if (calcLevel === 'MEDIUM') {
+      bgColor = 'bg-amber-400 border-amber-500'; textColor = 'text-amber-900'; label = 'Medium';
     } else {
-      bgColor = 'bg-emerald-500 border-emerald-600'; label = 'Low'; equation = 'L1 × S5';
+      bgColor = 'bg-emerald-500 border-emerald-600'; label = 'Low';
     }
 
     return (
@@ -73,21 +89,20 @@ export default function JsaReportExport({ jobs, onClose }: JsaReportExportProps)
         <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border shadow-sm ${bgColor} ${textColor} print:shadow-none print:border-none`}>
           {label}
         </span>
-        <span className="text-[8px] font-bold text-slate-600 bg-slate-100 px-1 py-0.5 rounded print:bg-transparent leading-none">
-          {equation} = {score}
+        <span className="text-[8px] font-bold text-slate-600 bg-slate-100 px-1 py-0.5 rounded print:bg-transparent leading-none whitespace-nowrap">
+          {equation} = {finalScore || '-'}
         </span>
       </div>
     );
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-2 md:p-6 print:p-0 print:bg-white animate-in fade-in duration-300 font-['Inter','Kanit',sans-serif]">
+    <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-2 md:p-6 print:p-0 print:bg-white animate-in fade-in duration-300 font-hybrid">
       
       {/* 🌟 บังคับตั้งค่าหน้ากระดาษเป็นแนวนอน (A4 Landscape) และปรับ CSS สำหรับการ Print โดยเฉพาะ */}
-      <style type="text/css">
-        {`
+      <style>{`
           @media print {
-            @page { size: A4 landscape; margin: 8mm; } /* บีบ Margin ให้แคบลงเพื่อให้เนื้อหาพอดี */
+            @page { size: A4 landscape; margin: 8mm; } 
             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white; }
             .no-print { display: none !important; }
             .print-a4-landscape {
@@ -99,16 +114,15 @@ export default function JsaReportExport({ jobs, onClose }: JsaReportExportProps)
               border: none !important;
               border-radius: 0 !important;
             }
-            .print-table { table-layout: fixed; width: 100%; } /* 🌟 ป้องกันตารางระเบิด */
+            .print-table { table-layout: fixed; width: 100%; }
             .print-table th, .print-table td { word-wrap: break-word; overflow-wrap: break-word; }
-            .print-table tr { page-break-inside: avoid; break-inside: avoid; } /* 🌟 ป้องกันแถวถูกตัดขาดกลาง */
+            .print-table tr { page-break-inside: avoid; break-inside: avoid; }
             .print-header-bg { background-color: #0f3f2b !important; color: white !important; }
           }
           .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
           .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
           .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        `}
-      </style>
+      `}</style>
 
       {/* 📦 Container หลัก (Responsive) */}
       <div className="bg-slate-50 w-full max-w-[95vw] h-[95vh] md:h-full print:h-auto print:max-w-none flex flex-col rounded-[24px] shadow-2xl overflow-hidden print-a4-landscape border border-slate-200">
@@ -211,7 +225,7 @@ export default function JsaReportExport({ jobs, onClose }: JsaReportExportProps)
           ) : (
             <div className="bg-white mx-auto shadow-xl print:shadow-none p-6 md:p-10 print:p-0 rounded-xl print:rounded-none print:w-[280mm]">
               
-              {/* 🌟 หัวเอกสาร (อัปเดตตามช่องกรอก) */}
+              {/* 🌟 หัวเอกสาร */}
               <div className="text-center mb-6 border-b-2 border-slate-800 pb-4">
                 <h1 className="text-xl md:text-2xl font-black text-slate-900 uppercase tracking-widest">Job Safety Analysis (JSA)</h1>
                 <div className="mt-2 flex flex-wrap justify-center items-center gap-2 text-xs md:text-sm font-bold text-slate-600">
@@ -223,7 +237,7 @@ export default function JsaReportExport({ jobs, onClose }: JsaReportExportProps)
                 </div>
               </div>
 
-              {/* 📊 ตาราง A4 ป้องกันตารางระเบิดด้วยความกว้างแบบ % */}
+              {/* 📊 ตาราง A4 */}
               <div className="w-full pb-4">
                 <table className="print-table w-full text-left border-collapse text-[10px] md:text-xs">
                   <thead>
@@ -240,31 +254,35 @@ export default function JsaReportExport({ jobs, onClose }: JsaReportExportProps)
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
-                    {filteredJobs.map((job, index) => (
-                      <tr key={job.id} className="align-top hover:bg-slate-50 print:hover:bg-transparent transition-colors">
-                        <td className="border border-slate-300 px-2 py-2 text-center font-black text-slate-800 bg-slate-50 print:bg-transparent">{index + 1}</td>
-                        <td className="border border-slate-300 px-2 py-2 font-bold text-slate-800 leading-snug">
-                          {job.jobStep}
-                          <div className="text-[8px] md:text-[9px] text-slate-500 font-medium mt-1">Area: {job.area}</div>
-                        </td>
-                        <td className="border border-slate-300 px-2 py-2 text-slate-600 leading-snug">{job.equipment}</td>
-                        <td className="border border-slate-300 px-2 py-2 text-rose-700 font-medium leading-snug">{job.potentialHazard}</td>
-                        <td className="border border-slate-300 px-2 py-2 text-slate-700 leading-snug">{job.consequence}</td>
-                        <td className="border border-slate-300 px-2 py-2 align-middle">
-                          {renderRiskBadge(job.initialRisk, job.initialRisk >= 15 ? 'CRITICAL' : job.initialRisk >= 10 ? 'HIGH' : 'MEDIUM')}
-                        </td>
-                        <td className="border border-slate-300 px-2 py-2 text-slate-700 whitespace-pre-line leading-snug">
-                          {job.controlMeasures}
-                        </td>
-                        <td className="border border-slate-300 px-2 py-2 text-emerald-700 font-medium text-center text-[9px] align-middle">
-                          <Check className="w-3 h-3 mx-auto mb-0.5 text-emerald-500"/>
-                          ตรวจสอบ
-                        </td>
-                        <td className="border border-slate-300 px-2 py-2 align-middle bg-slate-50/50 print:bg-transparent">
-                          {renderRiskBadge(job.riskLevel === 'LOW' ? 5 : 10, job.riskLevel)}
-                        </td>
-                      </tr>
-                    ))}
+                    {filteredJobs.map((job, index) => {
+                      return (
+                        <tr key={job.id} className="align-top hover:bg-slate-50 print:hover:bg-transparent transition-colors">
+                          <td className="border border-slate-300 px-2 py-2 text-center font-black text-slate-800 bg-slate-50 print:bg-transparent">{index + 1}</td>
+                          <td className="border border-slate-300 px-2 py-2 font-bold text-slate-800 leading-snug">
+                            {job.jobStep}
+                            <div className="text-[8px] md:text-[9px] text-slate-500 font-medium mt-1">Area: {job.area}</div>
+                          </td>
+                          <td className="border border-slate-300 px-2 py-2 text-slate-600 leading-snug">{job.equipment}</td>
+                          <td className="border border-slate-300 px-2 py-2 text-rose-700 font-medium leading-snug">{job.potentialHazard}</td>
+                          <td className="border border-slate-300 px-2 py-2 text-slate-700 leading-snug">{job.consequence}</td>
+                          <td className="border border-slate-300 px-2 py-2 align-middle">
+                            {/* ดึงค่าคะแนน Initial มาใช้งานจริง ถ้าไม่มี L,S ก็จะเอา risk_score/initialRisk มาเทียบสีเก่าสำรองไว้ */}
+                            {renderRiskBadge(job.risk_score || job.initialRisk, job.riskLevel, job.likelihood, job.severity)}
+                          </td>
+                          <td className="border border-slate-300 px-2 py-2 text-slate-700 whitespace-pre-line leading-snug">
+                            {job.controlMeasures}
+                          </td>
+                          <td className="border border-slate-300 px-2 py-2 text-emerald-700 font-medium text-center text-[9px] align-middle">
+                            <Check className="w-3 h-3 mx-auto mb-0.5 text-emerald-500"/>
+                            ตรวจสอบ
+                          </td>
+                          <td className="border border-slate-300 px-2 py-2 align-middle bg-slate-50/50 print:bg-transparent">
+                            {/* ดึงค่าคะแนน Residual มาใช้งานจริง */}
+                            {renderRiskBadge(job.residual_risk_score, 'LOW', job.residual_likelihood, job.residual_severity)}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

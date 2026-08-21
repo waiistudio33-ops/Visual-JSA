@@ -198,9 +198,7 @@ export default function MapSection({
   return (
     <div className="relative w-full h-full font-['Inter','Kanit',sans-serif]">
       
-      {/* 🌟 CSS แก้ปัญหา Popup ยืดหด และบังจอ */}
       <style>{`
-        /* ปิด Style พื้นฐานของ Mapbox/Maplibre ที่ชอบตีกับ Tailwind */
         .custom-popup .maplibregl-popup-content,
         .custom-popup .mapboxgl-popup-content {
           padding: 0 !important;
@@ -208,17 +206,16 @@ export default function MapSection({
           box-shadow: none !important;
           border-radius: 16px !important;
         }
-        /* ปรับเงาของสามเหลี่ยมชี้ (Tip) */
         .custom-popup .maplibregl-popup-tip,
         .custom-popup .mapboxgl-popup-tip {
           border-top-color: white !important;
         }
       `}</style>
 
-      {/* ✏️ แผงควบคุมการวาด */}
+      {/* ✏️ แผงควบคุมการวาด (อัปเกรด Responsive ป้องกันกล่องทะลุไปทับปุ่มซูม) */}
       {isDrawingMode && (
-        <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95vw] sm:w-auto max-w-2xl bg-white/95 backdrop-blur-xl p-2 sm:p-3 rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border border-slate-200 flex flex-col sm:flex-row items-center gap-2 sm:gap-3 animate-in slide-in-from-bottom-5">
-          <div className="flex items-center gap-3 text-slate-700 bg-cyan-50/80 px-4 py-2.5 rounded-xl border border-cyan-100 w-full justify-center sm:w-auto shrink-0">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-90px)] sm:w-max max-w-[calc(100%-90px)] lg:max-w-2xl bg-white/95 backdrop-blur-xl p-2.5 sm:p-3 rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border border-slate-200 flex flex-col lg:flex-row items-center justify-center gap-2.5 animate-in slide-in-from-bottom-5">
+          <div className="flex items-center gap-3 text-slate-700 bg-cyan-50/80 px-4 py-2.5 rounded-xl border border-cyan-100 w-full justify-center lg:w-auto shrink-0">
             <div className="w-8 h-8 rounded-full bg-cyan-100 flex items-center justify-center shrink-0">
               <PencilRuler className="w-4 h-4 text-cyan-600 animate-pulse"/>
             </div>
@@ -237,19 +234,19 @@ export default function MapSection({
             </div>
           </div>
           
-          <div className="flex gap-2 w-full sm:w-auto shrink-0">
-            <button title="[Esc] เพื่อยกเลิก" onClick={() => { setDraftRing([]); setCursorLngLat(null); onCancelDrawing(); }} className="flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-3 bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-xl text-[12px] sm:text-[13px] font-bold transition-all shadow-sm border border-slate-200 flex justify-center items-center gap-1.5">
+          <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full lg:w-auto shrink-0 justify-center">
+            <button title="[Esc] เพื่อยกเลิก" onClick={() => { setDraftRing([]); setCursorLngLat(null); onCancelDrawing(); }} className="flex-1 sm:flex-none px-4 py-2.5 bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-xl text-[12px] sm:text-[13px] font-bold transition-all shadow-sm border border-slate-200 flex justify-center items-center gap-1.5">
               <X className="w-4 h-4"/> ยกเลิก
             </button>
             
             {draftRing.length > 0 && (
-              <button title="[Z] เพื่อถอยกลับ" onClick={handleUndo} className="flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-3 bg-white hover:bg-amber-50 text-slate-600 hover:text-amber-600 rounded-xl text-[12px] sm:text-[13px] font-bold transition-all shadow-sm border border-slate-200 flex justify-center items-center gap-1.5">
+              <button title="[Z] เพื่อถอยกลับ" onClick={handleUndo} className="flex-1 sm:flex-none px-4 py-2.5 bg-white hover:bg-amber-50 text-slate-600 hover:text-amber-600 rounded-xl text-[12px] sm:text-[13px] font-bold transition-all shadow-sm border border-slate-200 flex justify-center items-center gap-1.5">
                 <Undo2 className="w-4 h-4"/> ถอยกลับ
               </button>
             )}
 
             {draftRing.length >= 3 && (
-              <button title="[Enter] เพื่อบันทึก" onClick={handleFinishDrawing} className="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl text-[12px] sm:text-[13px] font-black shadow-lg shadow-cyan-500/30 transition-all active:scale-95 flex justify-center items-center gap-1.5 border border-cyan-400">
+              <button title="[Enter] เพื่อบันทึก" onClick={handleFinishDrawing} className="w-full sm:w-auto px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl text-[12px] sm:text-[13px] font-black shadow-md shadow-cyan-500/30 transition-all active:scale-95 flex justify-center items-center gap-1.5 border border-cyan-400">
                 <Check className="w-4 h-4" strokeWidth={3}/> ยืนยันโซน 
               </button>
             )}

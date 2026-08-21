@@ -1,3 +1,4 @@
+// src/components/JsaDetailModal.tsx
 import { useState, useEffect } from 'react';
 import { 
   X, MapPin, AlertTriangle, ShieldCheck, Clock, CheckCircle2, 
@@ -67,16 +68,42 @@ export default function JsaDetailModal({ job, onClose, currentUser, onUpdateStat
     return <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border border-amber-200"><Clock className="w-3.5 h-3.5"/> รอตรวจสอบ (จป.)</span>;
   };
 
-  const getRiskLevelInfo = (score?: number) => {
-    if (!score) return { text: 'N/A', color: 'bg-slate-200 text-slate-500' };
-    if (score <= 4) return { text: 'LOW', color: 'bg-emerald-500 text-white' };
-    if (score <= 9) return { text: 'MEDIUM', color: 'bg-amber-500 text-white' };
-    if (score <= 14) return { text: 'HIGH', color: 'bg-orange-500 text-white' };
-    return { text: 'CRITICAL', color: 'bg-rose-600 text-white' };
+  // 🌟 ฟังก์ชันอัจฉริยะ (Smart Risk Level) ตรวจสอบจาก Matrix 2D
+  const getRiskLevelInfo = (l?: number, s?: number, fallbackScore?: number) => {
+    let calcLevel = 'LOW';
+    const finalScore = fallbackScore || (l && s ? l * s : 0);
+    
+    if (!finalScore) return { text: 'N/A', color: 'bg-slate-200 text-slate-500' };
+
+    // ถ้ามีค่า L, S ครบ ถอดรหัสจากตารางเลย
+    if (l && s && l >= 1 && l <= 5 && s >= 1 && s <= 5) {
+      const riskMatrix = [
+        ['LOW', 'LOW', 'MEDIUM', 'MEDIUM', 'HIGH'],          // แถว L=1
+        ['LOW', 'MEDIUM', 'MEDIUM', 'HIGH', 'HIGH'],         // แถว L=2
+        ['LOW', 'MEDIUM', 'MEDIUM', 'HIGH', 'CRITICAL'],     // แถว L=3
+        ['MEDIUM', 'MEDIUM', 'HIGH', 'HIGH', 'CRITICAL'],    // แถว L=4
+        ['MEDIUM', 'HIGH', 'HIGH', 'CRITICAL', 'CRITICAL']   // แถว L=5
+      ];
+      calcLevel = riskMatrix[l - 1][s - 1];
+    } else {
+      // เผื่อระบบเก่าไม่มี L, S ให้เช็คจากคะแนนรวมแทน
+      if (finalScore >= 15) calcLevel = 'CRITICAL';
+      else if (finalScore >= 10) calcLevel = 'HIGH';
+      else if (finalScore >= 5) calcLevel = 'MEDIUM';
+      else calcLevel = 'LOW';
+    }
+
+    if (calcLevel === 'CRITICAL' || calcLevel === 'EXTREME') return { text: 'EXTREME', color: 'bg-rose-600 text-white' };
+    if (calcLevel === 'HIGH') return { text: 'HIGH', color: 'bg-orange-500 text-white' };
+    if (calcLevel === 'MEDIUM') return { text: 'MEDIUM', color: 'bg-amber-400 text-amber-900' };
+    return { text: 'LOW', color: 'bg-emerald-500 text-white' };
   };
 
-  const initialRisk = getRiskLevelInfo(job.risk_score);
-  const residualRisk = getRiskLevelInfo(job.residual_risk_score);
+  const initialRisk = getRiskLevelInfo(job.likelihood, job.severity, job.risk_score || job.initialRisk);
+  const residualRisk = getRiskLevelInfo(job.residual_likelihood, job.residual_severity, job.residual_risk_score);
+  
+  const initialScoreDisplay = job.risk_score || job.initialRisk || (job.likelihood && job.severity ? job.likelihood * job.severity : '-');
+  const residualScoreDisplay = job.residual_risk_score || (job.residual_likelihood && job.residual_severity ? job.residual_likelihood * job.residual_severity : '-');
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-3 sm:p-6 animate-in fade-in duration-300 font-hybrid">
@@ -91,6 +118,11 @@ export default function JsaDetailModal({ job, onClose, currentUser, onUpdateStat
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2 sm:mb-3 pr-10">
             <span className="bg-slate-800 text-white px-3 py-1 rounded-lg text-xs sm:text-sm font-black tracking-wider shadow-sm">{job.jsaNo}</span>
             {getStatusBadge()}
+            {job.riskLevel && (
+              <span className={`px-3 py-1 rounded-lg text-xs sm:text-sm font-black shadow-sm ${initialRisk.color}`}>
+                ความเสี่ยง: {initialRisk.text}
+              </span>
+            )}
           </div>
           
           <h2 className="text-xl sm:text-3xl font-black text-slate-800 leading-tight mb-2 pr-4">{job.jobStep}</h2>
@@ -205,7 +237,7 @@ export default function JsaDetailModal({ job, onClose, currentUser, onUpdateStat
                 <div className="flex items-end justify-between">
                   <span className="text-[11px] font-black text-slate-500 uppercase tracking-wide mb-1">INITIAL RISK</span>
                   <div className={`rounded-xl px-6 py-2 flex flex-col items-center justify-center shadow-md min-w-[80px] ${initialRisk.color}`}>
-                    <span className="text-2xl font-black leading-none">{job.risk_score || '-'}</span>
+                    <span className="text-2xl font-black leading-none">{initialScoreDisplay}</span>
                     <span className="text-[10px] font-bold mt-0.5">{initialRisk.text}</span>
                   </div>
                 </div>
@@ -257,7 +289,7 @@ export default function JsaDetailModal({ job, onClose, currentUser, onUpdateStat
                 <div className="flex items-end justify-between">
                   <span className="text-[11px] font-black text-emerald-600 uppercase tracking-wide mb-1">RESIDUAL RISK</span>
                   <div className={`rounded-xl px-6 py-2 flex flex-col items-center justify-center shadow-md min-w-[80px] ${residualRisk.color}`}>
-                    <span className="text-2xl font-black leading-none">{job.residual_risk_score || '-'}</span>
+                    <span className="text-2xl font-black leading-none">{residualScoreDisplay}</span>
                     <span className="text-[10px] font-bold mt-0.5">{residualRisk.text}</span>
                   </div>
                 </div>
